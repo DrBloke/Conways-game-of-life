@@ -3,7 +3,8 @@ module Main exposing (..)
 import Html exposing (Html, button, div, fieldset, input, label, p, text)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
-import List.Extra
+import List exposing (..)
+import List.Extra exposing (lift2)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
 import Svg.Events exposing (onClick)
@@ -116,9 +117,9 @@ view model =
     div
         []
         [ svg
-            [ width <| toString 200
-            , height <| toString 100
-            , viewBox (" 0 0 200 100")
+            [ width <| toString 1200
+            , height <| toString 500
+            , viewBox (" 0 0 1200 500")
             ]
             (drawGrid model.grid)
         ]
@@ -137,17 +138,24 @@ renderCell : Cell -> Svg msg
 renderCell cell =
     case cell.status of
         Dead ->
-            rect [ x (toString <| (Tuple.first cell.coords) * 100), y (toString <| (Tuple.second cell.coords) * 100), width "100", height "100", fill (Maybe.withDefault "#ffffff" cell.color), stroke "#000000", strokeWidth "1" ] []
+            rect [ x (toString <| (Tuple.first cell.coords) * 10), y (toString <| (Tuple.second cell.coords) * 10), width "10", height "10", fill (Maybe.withDefault "#ffffff" cell.color), stroke "#000000", strokeWidth "1" ] []
 
         Alive ->
-            rect [ x (toString <| (Tuple.first cell.coords) * 100), y (toString <| (Tuple.second cell.coords) * 100), width "100", height "100", fill (Maybe.withDefault "#ffffff" cell.color), stroke "#000000", strokeWidth "1" ] []
+            rect [ x (toString <| (Tuple.first cell.coords) * 10), y (toString <| (Tuple.second cell.coords) * 10), width "10", height "10", fill (Maybe.withDefault "#ffffff" cell.color), stroke "#000000", strokeWidth "1" ] []
 
 
 defaultGrid : List Cell
 defaultGrid =
-    [ (Cell ( 0, 0 ) Dead Nothing)
-    , (Cell ( 1, 0 ) Alive <| Just "#000000")
-    ]
+    cartesianProduct (range 1 120) (range 1 50)
+        |> List.map (\( x, y ) -> (Cell ( x, y ) Dead Nothing))
+
+
+cartesianProduct xs ys =
+    lift2 (,) xs ys
+
+
+
+-- or this: List.concatMap (\x -> List.map (\y -> ( x, y )) ys) xs
 
 
 subscriptions : Model -> Sub Msg

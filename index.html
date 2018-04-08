@@ -10166,6 +10166,17 @@ var _elm_lang$svg$Svg_Events$onMouseUp = _elm_lang$svg$Svg_Events$simpleOn('mous
 var _user$project$Main$subscriptions = function (model) {
 	return _elm_lang$core$Platform_Sub$none;
 };
+var _user$project$Main$cartesianProduct = F2(
+	function (xs, ys) {
+		return A3(
+			_elm_community$list_extra$List_Extra$lift2,
+			F2(
+				function (v0, v1) {
+					return {ctor: '_Tuple2', _0: v0, _1: v1};
+				}),
+			xs,
+			ys);
+	});
 var _user$project$Main$renderCell = function (cell) {
 	var _p0 = cell.status;
 	if (_p0.ctor === 'Dead') {
@@ -10175,18 +10186,18 @@ var _user$project$Main$renderCell = function (cell) {
 				ctor: '::',
 				_0: _elm_lang$svg$Svg_Attributes$x(
 					_elm_lang$core$Basics$toString(
-						_elm_lang$core$Tuple$first(cell.coords) * 100)),
+						_elm_lang$core$Tuple$first(cell.coords) * 10)),
 				_1: {
 					ctor: '::',
 					_0: _elm_lang$svg$Svg_Attributes$y(
 						_elm_lang$core$Basics$toString(
-							_elm_lang$core$Tuple$second(cell.coords) * 100)),
+							_elm_lang$core$Tuple$second(cell.coords) * 10)),
 					_1: {
 						ctor: '::',
-						_0: _elm_lang$svg$Svg_Attributes$width('100'),
+						_0: _elm_lang$svg$Svg_Attributes$width('10'),
 						_1: {
 							ctor: '::',
-							_0: _elm_lang$svg$Svg_Attributes$height('100'),
+							_0: _elm_lang$svg$Svg_Attributes$height('10'),
 							_1: {
 								ctor: '::',
 								_0: _elm_lang$svg$Svg_Attributes$fill(
@@ -10213,18 +10224,18 @@ var _user$project$Main$renderCell = function (cell) {
 				ctor: '::',
 				_0: _elm_lang$svg$Svg_Attributes$x(
 					_elm_lang$core$Basics$toString(
-						_elm_lang$core$Tuple$first(cell.coords) * 100)),
+						_elm_lang$core$Tuple$first(cell.coords) * 10)),
 				_1: {
 					ctor: '::',
 					_0: _elm_lang$svg$Svg_Attributes$y(
 						_elm_lang$core$Basics$toString(
-							_elm_lang$core$Tuple$second(cell.coords) * 100)),
+							_elm_lang$core$Tuple$second(cell.coords) * 10)),
 					_1: {
 						ctor: '::',
-						_0: _elm_lang$svg$Svg_Attributes$width('100'),
+						_0: _elm_lang$svg$Svg_Attributes$width('10'),
 						_1: {
 							ctor: '::',
-							_0: _elm_lang$svg$Svg_Attributes$height('100'),
+							_0: _elm_lang$svg$Svg_Attributes$height('10'),
 							_1: {
 								ctor: '::',
 								_0: _elm_lang$svg$Svg_Attributes$fill(
@@ -10260,14 +10271,14 @@ var _user$project$Main$view = function (model) {
 				{
 					ctor: '::',
 					_0: _elm_lang$svg$Svg_Attributes$width(
-						_elm_lang$core$Basics$toString(200)),
+						_elm_lang$core$Basics$toString(1200)),
 					_1: {
 						ctor: '::',
 						_0: _elm_lang$svg$Svg_Attributes$height(
-							_elm_lang$core$Basics$toString(100)),
+							_elm_lang$core$Basics$toString(500)),
 						_1: {
 							ctor: '::',
-							_0: _elm_lang$svg$Svg_Attributes$viewBox(' 0 0 200 100'),
+							_0: _elm_lang$svg$Svg_Attributes$viewBox(' 0 0 1200 500'),
 							_1: {ctor: '[]'}
 						}
 					}
@@ -10295,23 +10306,20 @@ var _user$project$Main$Rules = F4(
 	});
 var _user$project$Main$Alive = {ctor: 'Alive'};
 var _user$project$Main$Dead = {ctor: 'Dead'};
-var _user$project$Main$defaultGrid = {
-	ctor: '::',
-	_0: A3(
-		_user$project$Main$Cell,
-		{ctor: '_Tuple2', _0: 0, _1: 0},
-		_user$project$Main$Dead,
-		_elm_lang$core$Maybe$Nothing),
-	_1: {
-		ctor: '::',
-		_0: A3(
+var _user$project$Main$defaultGrid = A2(
+	_elm_lang$core$List$map,
+	function (_p2) {
+		var _p3 = _p2;
+		return A3(
 			_user$project$Main$Cell,
-			{ctor: '_Tuple2', _0: 1, _1: 0},
-			_user$project$Main$Alive,
-			_elm_lang$core$Maybe$Just('#000000')),
-		_1: {ctor: '[]'}
-	}
-};
+			{ctor: '_Tuple2', _0: _p3._0, _1: _p3._1},
+			_user$project$Main$Dead,
+			_elm_lang$core$Maybe$Nothing);
+	},
+	A2(
+		_user$project$Main$cartesianProduct,
+		A2(_elm_lang$core$List$range, 1, 120),
+		A2(_elm_lang$core$List$range, 1, 50)));
 var _user$project$Main$Toroid = {ctor: 'Toroid'};
 var _user$project$Main$Escape = {ctor: 'Escape'};
 var _user$project$Main$Bounded = {ctor: 'Bounded'};
