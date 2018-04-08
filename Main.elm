@@ -48,7 +48,7 @@ init =
 type alias Cell =
     { coords : Coords
     , status : CellStatus
-    , cellColor : Maybe String
+    , color : Maybe String
     }
 
 
@@ -137,16 +137,16 @@ renderCell : Cell -> Svg msg
 renderCell cell =
     case cell.status of
         Dead ->
-            rect [ x (toString <| (Tuple.first cell.coords) * 100), y (toString <| (Tuple.second cell.coords) * 100), width "100", height "100" ] []
+            rect [ x (toString <| (Tuple.first cell.coords) * 100), y (toString <| (Tuple.second cell.coords) * 100), width "100", height "100", fill (Maybe.withDefault "#ffffff" cell.color), stroke "#000000", strokeWidth "1" ] []
 
         Alive ->
-            rect [ x (toString <| (Tuple.first cell.coords) * 100), y (toString <| (Tuple.second cell.coords) * 100), width "100", height "100" ] []
+            rect [ x (toString <| (Tuple.first cell.coords) * 100), y (toString <| (Tuple.second cell.coords) * 100), width "100", height "100", fill (Maybe.withDefault "#ffffff" cell.color), stroke "#000000", strokeWidth "1" ] []
 
 
 defaultGrid : List Cell
 defaultGrid =
     [ (Cell ( 0, 0 ) Dead Nothing)
-    , (Cell ( 1, 0 ) Alive Nothing)
+    , (Cell ( 1, 0 ) Alive <| Just "#000000")
     ]
 
 
