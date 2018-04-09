@@ -108,8 +108,34 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        CellClick coords ->
+            ( { model | grid = List.map (toggleClickedCellState coords) model.grid }
+            , Cmd.none
+            )
+
         _ ->
             ( model, Cmd.none )
+
+
+
+--update helpers (don't use outside of update scope)
+
+
+toggleClickedCellState : Coords -> Cell -> Cell
+toggleClickedCellState clickedCoords cell =
+    if cell.coords == clickedCoords then
+        case cell.status of
+            Alive ->
+                { cell | status = Dead }
+
+            Dead ->
+                { cell | status = Alive }
+    else
+        cell
+
+
+
+--View
 
 
 view : Model -> Html Msg
@@ -129,19 +155,19 @@ view model =
 --View functions
 
 
-drawGrid : List Cell -> List (Svg msg)
+drawGrid : List Cell -> List (Svg Msg)
 drawGrid grid =
     List.map renderCell grid
 
 
-renderCell : Cell -> Svg msg
+renderCell : Cell -> Svg Msg
 renderCell cell =
     case cell.status of
         Dead ->
-            rect [ x (toString <| (Tuple.first cell.coords) * 10), y (toString <| (Tuple.second cell.coords) * 10), width "10", height "10", fill (Maybe.withDefault "#ffffff" cell.color), stroke "#000000", strokeWidth "1" ] []
+            rect [ x (toString <| (Tuple.first cell.coords) * 10), y (toString <| (Tuple.second cell.coords) * 10), width "10", height "10", fill (Maybe.withDefault "#ffffff" cell.color), stroke "#000000", strokeWidth "1", Svg.Events.onClick (CellClick cell.coords) ] []
 
         Alive ->
-            rect [ x (toString <| (Tuple.first cell.coords) * 10), y (toString <| (Tuple.second cell.coords) * 10), width "10", height "10", fill (Maybe.withDefault "#ffffff" cell.color), stroke "#000000", strokeWidth "1" ] []
+            rect [ x (toString <| (Tuple.first cell.coords) * 10), y (toString <| (Tuple.second cell.coords) * 10), width "10", height "10", fill (Maybe.withDefault "#000000" cell.color), stroke "#000000", strokeWidth "1", Svg.Events.onClick (CellClick cell.coords) ] []
 
 
 defaultGrid : List Cell
