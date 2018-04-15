@@ -213,15 +213,15 @@ renderCell : Cell -> Svg Msg
 renderCell cell =
     case cell.status of
         Dead ->
-            rect [ x (toString <| ((Tuple.first cell.coords) * 10) - 10), y (toString <| ((Tuple.second cell.coords) * 10) - 10), width "10", height "10", fill (Maybe.withDefault "#ffffff" cell.color), stroke "#000000", strokeWidth "1", Svg.Events.onClick (CellClick cell.coords) ] []
+            rect [ x (toString <| ((Tuple.first cell.coords) * 50) - 50), y (toString <| ((Tuple.second cell.coords) * 50) - 50), width "50", height "50", fill (Maybe.withDefault "#ffffff" cell.color), stroke "#000000", strokeWidth "1", Svg.Events.onClick (CellClick cell.coords) ] []
 
         Alive ->
-            rect [ x (toString <| ((Tuple.first cell.coords) * 10) - 10), y (toString <| ((Tuple.second cell.coords) * 10) - 10), width "10", height "10", fill (Maybe.withDefault "#000000" cell.color), stroke "#000000", strokeWidth "1", Svg.Events.onClick (CellClick cell.coords) ] []
+            rect [ x (toString <| ((Tuple.first cell.coords) * 50) - 50), y (toString <| ((Tuple.second cell.coords) * 50) - 50), width "50", height "50", fill (Maybe.withDefault "#000000" cell.color), stroke "#000000", strokeWidth "1", Svg.Events.onClick (CellClick cell.coords) ] []
 
 
 defaultGrid : List Cell
 defaultGrid =
-    cartesianProduct (range 1 100) (range 1 50)
+    cartesianProduct (range 1 20) (range 1 10)
         |> List.map (\( x, y ) -> (Cell ( x, y ) Dead Nothing))
 
 
