@@ -113,6 +113,11 @@ update msg model =
             , Cmd.none
             )
 
+        UpdateGameState ->
+            ( { model | grid = List.map (applyGameRules model.grid) model.grid }
+            , Cmd.none
+            )
+
         _ ->
             ( model, Cmd.none )
 
@@ -134,6 +139,49 @@ toggleClickedCellState clickedCoords cell =
         cell
 
 
+applyGameRules : List Cell -> Cell -> Cell
+applyGameRules grid cell =
+    let
+        numberOfLiveNeighbours =
+            List.sum (lift2 isInGridAndIsLive (getNeighboursCoords cell.coords) grid)
+    in
+        case cell.status of
+            Alive ->
+                if numberOfLiveNeighbours < 2 then
+                    { cell | status = Dead }
+                else if numberOfLiveNeighbours > 3 then
+                    { cell | status = Dead }
+                else
+                    cell
+
+            Dead ->
+                if numberOfLiveNeighbours == 3 then
+                    { cell | status = Alive }
+                else
+                    cell
+
+
+isInGridAndIsLive : Coords -> Cell -> Int
+isInGridAndIsLive neighbourCoords gridCell =
+    if neighbourCoords == gridCell.coords && gridCell.status == Alive then
+        1
+    else
+        0
+
+
+getNeighboursCoords : Coords -> List Coords
+getNeighboursCoords ( x, y ) =
+    ( x - 1, y - 1 )
+        :: ( x, y - 1 )
+        :: ( x + 1, y - 1 )
+        :: ( x - 1, y )
+        :: ( x + 1, y )
+        :: ( x - 1, y + 1 )
+        :: ( x, y + 1 )
+        :: ( x + 1, y + 1 )
+        :: []
+
+
 
 --View
 
@@ -143,11 +191,12 @@ view model =
     div
         []
         [ svg
-            [ width <| toString 1200
+            [ width <| toString 1000
             , height <| toString 500
-            , viewBox (" 0 0 1200 500")
+            , viewBox (" 0 0 1000 500")
             ]
             (drawGrid model.grid)
+        , button [ Html.Events.onClick UpdateGameState ] [ Html.text "step" ]
         ]
 
 
@@ -164,15 +213,15 @@ renderCell : Cell -> Svg Msg
 renderCell cell =
     case cell.status of
         Dead ->
-            rect [ x (toString <| (Tuple.first cell.coords) * 10), y (toString <| (Tuple.second cell.coords) * 10), width "10", height "10", fill (Maybe.withDefault "#ffffff" cell.color), stroke "#000000", strokeWidth "1", Svg.Events.onClick (CellClick cell.coords) ] []
+            rect [ x (toString <| ((Tuple.first cell.coords) * 100) - 100), y (toString <| ((Tuple.second cell.coords) * 100) - 100), width "100", height "100", fill (Maybe.withDefault "#ffffff" cell.color), stroke "#000000", strokeWidth "1", Svg.Events.onClick (CellClick cell.coords) ] []
 
         Alive ->
-            rect [ x (toString <| (Tuple.first cell.coords) * 10), y (toString <| (Tuple.second cell.coords) * 10), width "10", height "10", fill (Maybe.withDefault "#000000" cell.color), stroke "#000000", strokeWidth "1", Svg.Events.onClick (CellClick cell.coords) ] []
+            rect [ x (toString <| ((Tuple.first cell.coords) * 100) - 100), y (toString <| ((Tuple.second cell.coords) * 100) - 100), width "100", height "100", fill (Maybe.withDefault "#000000" cell.color), stroke "#000000", strokeWidth "1", Svg.Events.onClick (CellClick cell.coords) ] []
 
 
 defaultGrid : List Cell
 defaultGrid =
-    cartesianProduct (range 1 120) (range 1 50)
+    cartesianProduct (range 1 10) (range 1 5)
         |> List.map (\( x, y ) -> (Cell ( x, y ) Dead Nothing))
 
 

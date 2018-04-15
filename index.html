@@ -14324,6 +14324,44 @@ var _user$project$Main$cartesianProduct = F2(
 			xs,
 			ys);
 	});
+var _user$project$Main$getNeighboursCoords = function (_p0) {
+	var _p1 = _p0;
+	var _p3 = _p1._1;
+	var _p2 = _p1._0;
+	return {
+		ctor: '::',
+		_0: {ctor: '_Tuple2', _0: _p2 - 1, _1: _p3 - 1},
+		_1: {
+			ctor: '::',
+			_0: {ctor: '_Tuple2', _0: _p2, _1: _p3 - 1},
+			_1: {
+				ctor: '::',
+				_0: {ctor: '_Tuple2', _0: _p2 + 1, _1: _p3 - 1},
+				_1: {
+					ctor: '::',
+					_0: {ctor: '_Tuple2', _0: _p2 - 1, _1: _p3},
+					_1: {
+						ctor: '::',
+						_0: {ctor: '_Tuple2', _0: _p2 + 1, _1: _p3},
+						_1: {
+							ctor: '::',
+							_0: {ctor: '_Tuple2', _0: _p2 - 1, _1: _p3 + 1},
+							_1: {
+								ctor: '::',
+								_0: {ctor: '_Tuple2', _0: _p2, _1: _p3 + 1},
+								_1: {
+									ctor: '::',
+									_0: {ctor: '_Tuple2', _0: _p2 + 1, _1: _p3 + 1},
+									_1: {ctor: '[]'}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	};
+};
 var _user$project$Main$Model = F6(
 	function (a, b, c, d, e, f) {
 		return {grid: a, rulesOfTheGame: b, showGridLines: c, zoomLevel: d, inProgress: e, generationTime: f};
@@ -14337,12 +14375,16 @@ var _user$project$Main$Rules = F4(
 		return {minNeighbours: a, maxNeighbours: b, spawnNeighbours: c, edgeRule: d};
 	});
 var _user$project$Main$Alive = {ctor: 'Alive'};
+var _user$project$Main$isInGridAndIsLive = F2(
+	function (neighbourCoords, gridCell) {
+		return (_elm_lang$core$Native_Utils.eq(neighbourCoords, gridCell.coords) && _elm_lang$core$Native_Utils.eq(gridCell.status, _user$project$Main$Alive)) ? 1 : 0;
+	});
 var _user$project$Main$Dead = {ctor: 'Dead'};
 var _user$project$Main$toggleClickedCellState = F2(
 	function (clickedCoords, cell) {
 		if (_elm_lang$core$Native_Utils.eq(cell.coords, clickedCoords)) {
-			var _p0 = cell.status;
-			if (_p0.ctor === 'Alive') {
+			var _p4 = cell.status;
+			if (_p4.ctor === 'Alive') {
 				return _elm_lang$core$Native_Utils.update(
 					cell,
 					{status: _user$project$Main$Dead});
@@ -14355,40 +14397,75 @@ var _user$project$Main$toggleClickedCellState = F2(
 			return cell;
 		}
 	});
+var _user$project$Main$applyGameRules = F2(
+	function (grid, cell) {
+		var numberOfLiveNeighbours = _elm_lang$core$List$sum(
+			A3(
+				_elm_community$list_extra$List_Extra$lift2,
+				_user$project$Main$isInGridAndIsLive,
+				_user$project$Main$getNeighboursCoords(cell.coords),
+				grid));
+		var _p5 = cell.status;
+		if (_p5.ctor === 'Alive') {
+			return (_elm_lang$core$Native_Utils.cmp(numberOfLiveNeighbours, 2) < 0) ? _elm_lang$core$Native_Utils.update(
+				cell,
+				{status: _user$project$Main$Dead}) : ((_elm_lang$core$Native_Utils.cmp(numberOfLiveNeighbours, 3) > 0) ? _elm_lang$core$Native_Utils.update(
+				cell,
+				{status: _user$project$Main$Dead}) : cell);
+		} else {
+			return _elm_lang$core$Native_Utils.eq(numberOfLiveNeighbours, 3) ? _elm_lang$core$Native_Utils.update(
+				cell,
+				{status: _user$project$Main$Alive}) : cell;
+		}
+	});
 var _user$project$Main$update = F2(
 	function (msg, model) {
-		var _p1 = msg;
-		if (_p1.ctor === 'CellClick') {
-			return {
-				ctor: '_Tuple2',
-				_0: _elm_lang$core$Native_Utils.update(
-					model,
-					{
-						grid: A2(
-							_elm_lang$core$List$map,
-							_user$project$Main$toggleClickedCellState(_p1._0),
-							model.grid)
-					}),
-				_1: _elm_lang$core$Platform_Cmd$none
-			};
-		} else {
-			return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+		var _p6 = msg;
+		switch (_p6.ctor) {
+			case 'CellClick':
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							grid: A2(
+								_elm_lang$core$List$map,
+								_user$project$Main$toggleClickedCellState(_p6._0),
+								model.grid)
+						}),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+			case 'UpdateGameState':
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							grid: A2(
+								_elm_lang$core$List$map,
+								_user$project$Main$applyGameRules(model.grid),
+								model.grid)
+						}),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+			default:
+				return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 		}
 	});
 var _user$project$Main$defaultGrid = A2(
 	_elm_lang$core$List$map,
-	function (_p2) {
-		var _p3 = _p2;
+	function (_p7) {
+		var _p8 = _p7;
 		return A3(
 			_user$project$Main$Cell,
-			{ctor: '_Tuple2', _0: _p3._0, _1: _p3._1},
+			{ctor: '_Tuple2', _0: _p8._0, _1: _p8._1},
 			_user$project$Main$Dead,
 			_elm_lang$core$Maybe$Nothing);
 	},
 	A2(
 		_user$project$Main$cartesianProduct,
-		A2(_elm_lang$core$List$range, 1, 120),
-		A2(_elm_lang$core$List$range, 1, 50)));
+		A2(_elm_lang$core$List$range, 1, 10),
+		A2(_elm_lang$core$List$range, 1, 5)));
 var _user$project$Main$Toroid = {ctor: 'Toroid'};
 var _user$project$Main$Escape = {ctor: 'Escape'};
 var _user$project$Main$Bounded = {ctor: 'Bounded'};
@@ -14441,26 +14518,26 @@ var _user$project$Main$CellClick = function (a) {
 	return {ctor: 'CellClick', _0: a};
 };
 var _user$project$Main$renderCell = function (cell) {
-	var _p4 = cell.status;
-	if (_p4.ctor === 'Dead') {
+	var _p9 = cell.status;
+	if (_p9.ctor === 'Dead') {
 		return A2(
 			_elm_lang$svg$Svg$rect,
 			{
 				ctor: '::',
 				_0: _elm_lang$svg$Svg_Attributes$x(
 					_elm_lang$core$Basics$toString(
-						_elm_lang$core$Tuple$first(cell.coords) * 10)),
+						(_elm_lang$core$Tuple$first(cell.coords) * 100) - 100)),
 				_1: {
 					ctor: '::',
 					_0: _elm_lang$svg$Svg_Attributes$y(
 						_elm_lang$core$Basics$toString(
-							_elm_lang$core$Tuple$second(cell.coords) * 10)),
+							(_elm_lang$core$Tuple$second(cell.coords) * 100) - 100)),
 					_1: {
 						ctor: '::',
-						_0: _elm_lang$svg$Svg_Attributes$width('10'),
+						_0: _elm_lang$svg$Svg_Attributes$width('100'),
 						_1: {
 							ctor: '::',
-							_0: _elm_lang$svg$Svg_Attributes$height('10'),
+							_0: _elm_lang$svg$Svg_Attributes$height('100'),
 							_1: {
 								ctor: '::',
 								_0: _elm_lang$svg$Svg_Attributes$fill(
@@ -14492,18 +14569,18 @@ var _user$project$Main$renderCell = function (cell) {
 				ctor: '::',
 				_0: _elm_lang$svg$Svg_Attributes$x(
 					_elm_lang$core$Basics$toString(
-						_elm_lang$core$Tuple$first(cell.coords) * 10)),
+						(_elm_lang$core$Tuple$first(cell.coords) * 100) - 100)),
 				_1: {
 					ctor: '::',
 					_0: _elm_lang$svg$Svg_Attributes$y(
 						_elm_lang$core$Basics$toString(
-							_elm_lang$core$Tuple$second(cell.coords) * 10)),
+							(_elm_lang$core$Tuple$second(cell.coords) * 100) - 100)),
 					_1: {
 						ctor: '::',
-						_0: _elm_lang$svg$Svg_Attributes$width('10'),
+						_0: _elm_lang$svg$Svg_Attributes$width('100'),
 						_1: {
 							ctor: '::',
-							_0: _elm_lang$svg$Svg_Attributes$height('10'),
+							_0: _elm_lang$svg$Svg_Attributes$height('100'),
 							_1: {
 								ctor: '::',
 								_0: _elm_lang$svg$Svg_Attributes$fill(
@@ -14544,20 +14621,35 @@ var _user$project$Main$view = function (model) {
 				{
 					ctor: '::',
 					_0: _elm_lang$svg$Svg_Attributes$width(
-						_elm_lang$core$Basics$toString(1200)),
+						_elm_lang$core$Basics$toString(1000)),
 					_1: {
 						ctor: '::',
 						_0: _elm_lang$svg$Svg_Attributes$height(
 							_elm_lang$core$Basics$toString(500)),
 						_1: {
 							ctor: '::',
-							_0: _elm_lang$svg$Svg_Attributes$viewBox(' 0 0 1200 500'),
+							_0: _elm_lang$svg$Svg_Attributes$viewBox(' 0 0 1000 500'),
 							_1: {ctor: '[]'}
 						}
 					}
 				},
 				_user$project$Main$drawGrid(model.grid)),
-			_1: {ctor: '[]'}
+			_1: {
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$button,
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html_Events$onClick(_user$project$Main$UpdateGameState),
+						_1: {ctor: '[]'}
+					},
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html$text('step'),
+						_1: {ctor: '[]'}
+					}),
+				_1: {ctor: '[]'}
+			}
 		});
 };
 var _user$project$Main$main = _elm_lang$html$Html$program(
