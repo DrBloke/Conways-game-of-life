@@ -8,6 +8,9 @@ import List.Extra exposing (lift2, unique)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
 import Svg.Events exposing (onClick)
+import Time exposing (..)
+import Material.Icons.Av exposing (skip_next, play_circle_filled, pause_circle_filled)
+import Color
 
 
 main =
@@ -83,6 +86,7 @@ type Pattern
 type Msg
     = CellClick Coords
     | ToggleInProgress
+    | Tick Bool Time
     | UpdateGameState
     | InputGameState
     | OutputGameState
@@ -105,6 +109,17 @@ update msg model =
 
         UpdateGameState ->
             ( { model | liveCells = applyGameRules model.liveCells }
+            , Cmd.none
+            )
+
+        Tick inProgress time ->
+            if inProgress then
+                update UpdateGameState model
+            else
+                ( model, Cmd.none )
+
+        ToggleInProgress ->
+            ( { model | inProgress = not model.inProgress }
             , Cmd.none
             )
 
@@ -189,12 +204,11 @@ view model =
             , height <| toString 500
             , viewBox (" 0 0 1000 500")
             ]
-            (List.append
-                --maybe by changing this to make the live cells children of the grid we could make use of Lazy
-                (drawGrid model.grid)
-                (drawLiveCells model.liveCells)
+            ((drawGrid model.grid)
+                ++ (drawLiveCells model.liveCells)
             )
-        , button [ Html.Events.onClick UpdateGameState ] [ Html.text "step" ]
+        , playOrPauseButton model.inProgress
+        , skipNextButton
         ]
 
 
@@ -210,6 +224,33 @@ drawGrid grid =
 drawLiveCells : List Coords -> List (Svg Msg)
 drawLiveCells liveCells =
     List.map renderLiveCell liveCells
+
+
+playOrPauseButton : Bool -> Svg Msg
+playOrPauseButton inProgress =
+    let
+        button =
+            if inProgress then
+                pause_circle_filled
+            else
+                play_circle_filled
+    in
+        svg
+            [ width <| toString 50
+            , height <| toString 50
+            , Svg.Events.onClick ToggleInProgress
+            ]
+            [ button Color.black 50 ]
+
+
+skipNextButton : Svg Msg
+skipNextButton =
+    svg
+        [ width <| toString 50
+        , height <| toString 50
+        , Svg.Events.onClick UpdateGameState
+        ]
+        [ skip_next Color.black 50 ]
 
 
 renderEmptyCell : Coords -> Svg Msg
@@ -237,4 +278,4 @@ cartesianProduct xs ys =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    Time.every (100 * millisecond) (Tick model.inProgress)
