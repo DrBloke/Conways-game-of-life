@@ -14324,6 +14324,43 @@ var _user$project$Main$cartesianProduct = F2(
 			xs,
 			ys);
 	});
+var _user$project$Main$emptyGrid = A2(
+	_user$project$Main$cartesianProduct,
+	A2(_elm_lang$core$List$range, 1, 20),
+	A2(_elm_lang$core$List$range, 1, 10));
+var _user$project$Main$renderLiveCell = function (coords) {
+	return A2(
+		_elm_lang$svg$Svg$rect,
+		{
+			ctor: '::',
+			_0: _elm_lang$svg$Svg_Attributes$x(
+				_elm_lang$core$Basics$toString(
+					(_elm_lang$core$Tuple$first(coords) * 50) - 50)),
+			_1: {
+				ctor: '::',
+				_0: _elm_lang$svg$Svg_Attributes$y(
+					_elm_lang$core$Basics$toString(
+						(_elm_lang$core$Tuple$second(coords) * 50) - 50)),
+				_1: {
+					ctor: '::',
+					_0: _elm_lang$svg$Svg_Attributes$width('50'),
+					_1: {
+						ctor: '::',
+						_0: _elm_lang$svg$Svg_Attributes$height('50'),
+						_1: {
+							ctor: '::',
+							_0: _elm_lang$svg$Svg_Attributes$fill('#000000'),
+							_1: {ctor: '[]'}
+						}
+					}
+				}
+			}
+		},
+		{ctor: '[]'});
+};
+var _user$project$Main$drawLiveCells = function (liveCells) {
+	return A2(_elm_lang$core$List$map, _user$project$Main$renderLiveCell, liveCells);
+};
 var _user$project$Main$getNeighboursCoords = function (_p0) {
 	var _p1 = _p0;
 	var _p3 = _p1._1;
@@ -14362,76 +14399,78 @@ var _user$project$Main$getNeighboursCoords = function (_p0) {
 		}
 	};
 };
-var _user$project$Main$Model = F6(
-	function (a, b, c, d, e, f) {
-		return {grid: a, rulesOfTheGame: b, showGridLines: c, zoomLevel: d, inProgress: e, generationTime: f};
+var _user$project$Main$getNeighboursIfDead = F3(
+	function (liveCells, cell, deadNeighbours) {
+		var neighbours = _user$project$Main$getNeighboursCoords(cell);
+		var newDeadNeighbours = A2(
+			_elm_lang$core$List$filter,
+			function (thisNeighbour) {
+				return !A2(_elm_lang$core$List$member, thisNeighbour, liveCells);
+			},
+			neighbours);
+		return A2(_elm_lang$core$List$append, newDeadNeighbours, deadNeighbours);
 	});
-var _user$project$Main$Cell = F3(
-	function (a, b, c) {
-		return {coords: a, status: b, color: c};
+var _user$project$Main$surroundingCells = function (liveCells) {
+	return A3(
+		_elm_lang$core$List$foldl,
+		_user$project$Main$getNeighboursIfDead(liveCells),
+		{ctor: '[]'},
+		liveCells);
+};
+var _user$project$Main$liveNeighboursOfCell = F2(
+	function (liveCells, coords) {
+		return A2(
+			_elm_lang$core$List$filter,
+			A2(_elm_lang$core$Basics$flip, _elm_lang$core$List$member, liveCells),
+			_user$project$Main$getNeighboursCoords(coords));
 	});
-var _user$project$Main$Rules = F4(
-	function (a, b, c, d) {
-		return {minNeighbours: a, maxNeighbours: b, spawnNeighbours: c, edgeRule: d};
+var _user$project$Main$numLiveNeighbours = F2(
+	function (liveCells, coords) {
+		return _elm_lang$core$List$length(
+			A2(_user$project$Main$liveNeighboursOfCell, liveCells, coords));
 	});
-var _user$project$Main$Alive = {ctor: 'Alive'};
-var _user$project$Main$isInGridAndIsLive = F2(
-	function (neighbourCoords, gridCell) {
-		return (_elm_lang$core$Native_Utils.eq(neighbourCoords, gridCell.coords) && _elm_lang$core$Native_Utils.eq(gridCell.status, _user$project$Main$Alive)) ? 1 : 0;
-	});
-var _user$project$Main$Dead = {ctor: 'Dead'};
+var _user$project$Main$applyGameRules = function (liveCells) {
+	var deadCellsThatComeToLife = A2(
+		_elm_lang$core$List$filter,
+		function (coords) {
+			return _elm_lang$core$Native_Utils.eq(
+				A2(_user$project$Main$numLiveNeighbours, liveCells, coords),
+				3);
+		},
+		_user$project$Main$surroundingCells(liveCells));
+	var liveCellsThatContiueToLive = A2(
+		_elm_lang$core$List$filter,
+		function (coords) {
+			return (_elm_lang$core$Native_Utils.cmp(
+				A2(_user$project$Main$numLiveNeighbours, liveCells, coords),
+				1) > 0) && (_elm_lang$core$Native_Utils.cmp(
+				A2(_user$project$Main$numLiveNeighbours, liveCells, coords),
+				4) < 0);
+		},
+		liveCells);
+	return _elm_community$list_extra$List_Extra$unique(
+		A2(_elm_lang$core$List$append, liveCellsThatContiueToLive, deadCellsThatComeToLife));
+};
 var _user$project$Main$toggleClickedCellState = F2(
-	function (clickedCoords, cell) {
-		if (_elm_lang$core$Native_Utils.eq(cell.coords, clickedCoords)) {
-			var _p4 = cell.status;
-			if (_p4.ctor === 'Alive') {
-				return _elm_lang$core$Native_Utils.update(
-					cell,
-					{status: _user$project$Main$Dead});
-			} else {
-				return _elm_lang$core$Native_Utils.update(
-					cell,
-					{status: _user$project$Main$Alive});
-			}
-		} else {
-			return cell;
-		}
-	});
-var _user$project$Main$applyGameRules = F2(
-	function (grid, cell) {
-		var numberOfLiveNeighbours = _elm_lang$core$List$sum(
-			A3(
-				_elm_community$list_extra$List_Extra$lift2,
-				_user$project$Main$isInGridAndIsLive,
-				_user$project$Main$getNeighboursCoords(cell.coords),
-				grid));
-		var _p5 = cell.status;
-		if (_p5.ctor === 'Alive') {
-			return (_elm_lang$core$Native_Utils.cmp(numberOfLiveNeighbours, 2) < 0) ? _elm_lang$core$Native_Utils.update(
-				cell,
-				{status: _user$project$Main$Dead}) : ((_elm_lang$core$Native_Utils.cmp(numberOfLiveNeighbours, 3) > 0) ? _elm_lang$core$Native_Utils.update(
-				cell,
-				{status: _user$project$Main$Dead}) : cell);
-		} else {
-			return _elm_lang$core$Native_Utils.eq(numberOfLiveNeighbours, 3) ? _elm_lang$core$Native_Utils.update(
-				cell,
-				{status: _user$project$Main$Alive}) : cell;
-		}
+	function (clickedCoords, liveCells) {
+		return A2(_elm_lang$core$List$member, clickedCoords, liveCells) ? A2(
+			_elm_lang$core$List$filter,
+			function (x) {
+				return !_elm_lang$core$Native_Utils.eq(x, clickedCoords);
+			},
+			liveCells) : {ctor: '::', _0: clickedCoords, _1: liveCells};
 	});
 var _user$project$Main$update = F2(
 	function (msg, model) {
-		var _p6 = msg;
-		switch (_p6.ctor) {
+		var _p4 = msg;
+		switch (_p4.ctor) {
 			case 'CellClick':
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							grid: A2(
-								_elm_lang$core$List$map,
-								_user$project$Main$toggleClickedCellState(_p6._0),
-								model.grid)
+							liveCells: A2(_user$project$Main$toggleClickedCellState, _p4._0, model.liveCells)
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
@@ -14441,10 +14480,7 @@ var _user$project$Main$update = F2(
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							grid: A2(
-								_elm_lang$core$List$map,
-								_user$project$Main$applyGameRules(model.grid),
-								model.grid)
+							liveCells: _user$project$Main$applyGameRules(model.liveCells)
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
@@ -14452,27 +14488,22 @@ var _user$project$Main$update = F2(
 				return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 		}
 	});
-var _user$project$Main$defaultGrid = A2(
-	_elm_lang$core$List$map,
-	function (_p7) {
-		var _p8 = _p7;
-		return A3(
-			_user$project$Main$Cell,
-			{ctor: '_Tuple2', _0: _p8._0, _1: _p8._1},
-			_user$project$Main$Dead,
-			_elm_lang$core$Maybe$Nothing);
-	},
-	A2(
-		_user$project$Main$cartesianProduct,
-		A2(_elm_lang$core$List$range, 1, 20),
-		A2(_elm_lang$core$List$range, 1, 10)));
+var _user$project$Main$Model = F7(
+	function (a, b, c, d, e, f, g) {
+		return {grid: a, liveCells: b, rulesOfTheGame: c, showGridLines: d, zoomLevel: e, inProgress: f, generationTime: g};
+	});
+var _user$project$Main$Rules = F4(
+	function (a, b, c, d) {
+		return {minNeighbours: a, maxNeighbours: b, spawnNeighbours: c, edgeRule: d};
+	});
 var _user$project$Main$Toroid = {ctor: 'Toroid'};
 var _user$project$Main$Escape = {ctor: 'Escape'};
 var _user$project$Main$Bounded = {ctor: 'Bounded'};
 var _user$project$Main$init = {
 	ctor: '_Tuple2',
 	_0: {
-		grid: _user$project$Main$defaultGrid,
+		grid: _user$project$Main$emptyGrid,
+		liveCells: {ctor: '[]'},
 		rulesOfTheGame: A4(_user$project$Main$Rules, 2, 3, 3, _user$project$Main$Bounded),
 		showGridLines: true,
 		zoomLevel: 1,
@@ -14517,98 +14548,51 @@ var _user$project$Main$ToggleInProgress = {ctor: 'ToggleInProgress'};
 var _user$project$Main$CellClick = function (a) {
 	return {ctor: 'CellClick', _0: a};
 };
-var _user$project$Main$renderCell = function (cell) {
-	var _p9 = cell.status;
-	if (_p9.ctor === 'Dead') {
-		return A2(
-			_elm_lang$svg$Svg$rect,
-			{
+var _user$project$Main$renderEmptyCell = function (coords) {
+	return A2(
+		_elm_lang$svg$Svg$rect,
+		{
+			ctor: '::',
+			_0: _elm_lang$svg$Svg_Attributes$x(
+				_elm_lang$core$Basics$toString(
+					(_elm_lang$core$Tuple$first(coords) * 50) - 50)),
+			_1: {
 				ctor: '::',
-				_0: _elm_lang$svg$Svg_Attributes$x(
+				_0: _elm_lang$svg$Svg_Attributes$y(
 					_elm_lang$core$Basics$toString(
-						(_elm_lang$core$Tuple$first(cell.coords) * 50) - 50)),
+						(_elm_lang$core$Tuple$second(coords) * 50) - 50)),
 				_1: {
 					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$y(
-						_elm_lang$core$Basics$toString(
-							(_elm_lang$core$Tuple$second(cell.coords) * 50) - 50)),
+					_0: _elm_lang$svg$Svg_Attributes$width('50'),
 					_1: {
 						ctor: '::',
-						_0: _elm_lang$svg$Svg_Attributes$width('50'),
+						_0: _elm_lang$svg$Svg_Attributes$height('50'),
 						_1: {
 							ctor: '::',
-							_0: _elm_lang$svg$Svg_Attributes$height('50'),
+							_0: _elm_lang$svg$Svg_Attributes$fill('#ffffff'),
 							_1: {
 								ctor: '::',
-								_0: _elm_lang$svg$Svg_Attributes$fill(
-									A2(_elm_lang$core$Maybe$withDefault, '#ffffff', cell.color)),
+								_0: _elm_lang$svg$Svg_Attributes$stroke('#000000'),
 								_1: {
 									ctor: '::',
-									_0: _elm_lang$svg$Svg_Attributes$stroke('#000000'),
+									_0: _elm_lang$svg$Svg_Attributes$strokeWidth('1'),
 									_1: {
 										ctor: '::',
-										_0: _elm_lang$svg$Svg_Attributes$strokeWidth('1'),
-										_1: {
-											ctor: '::',
-											_0: _elm_lang$svg$Svg_Events$onClick(
-												_user$project$Main$CellClick(cell.coords)),
-											_1: {ctor: '[]'}
-										}
+										_0: _elm_lang$svg$Svg_Events$onClick(
+											_user$project$Main$CellClick(coords)),
+										_1: {ctor: '[]'}
 									}
 								}
 							}
 						}
 					}
 				}
-			},
-			{ctor: '[]'});
-	} else {
-		return A2(
-			_elm_lang$svg$Svg$rect,
-			{
-				ctor: '::',
-				_0: _elm_lang$svg$Svg_Attributes$x(
-					_elm_lang$core$Basics$toString(
-						(_elm_lang$core$Tuple$first(cell.coords) * 50) - 50)),
-				_1: {
-					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$y(
-						_elm_lang$core$Basics$toString(
-							(_elm_lang$core$Tuple$second(cell.coords) * 50) - 50)),
-					_1: {
-						ctor: '::',
-						_0: _elm_lang$svg$Svg_Attributes$width('50'),
-						_1: {
-							ctor: '::',
-							_0: _elm_lang$svg$Svg_Attributes$height('50'),
-							_1: {
-								ctor: '::',
-								_0: _elm_lang$svg$Svg_Attributes$fill(
-									A2(_elm_lang$core$Maybe$withDefault, '#000000', cell.color)),
-								_1: {
-									ctor: '::',
-									_0: _elm_lang$svg$Svg_Attributes$stroke('#000000'),
-									_1: {
-										ctor: '::',
-										_0: _elm_lang$svg$Svg_Attributes$strokeWidth('1'),
-										_1: {
-											ctor: '::',
-											_0: _elm_lang$svg$Svg_Events$onClick(
-												_user$project$Main$CellClick(cell.coords)),
-											_1: {ctor: '[]'}
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-			},
-			{ctor: '[]'});
-	}
+			}
+		},
+		{ctor: '[]'});
 };
 var _user$project$Main$drawGrid = function (grid) {
-	return A2(_elm_lang$core$List$map, _user$project$Main$renderCell, grid);
+	return A2(_elm_lang$core$List$map, _user$project$Main$renderEmptyCell, grid);
 };
 var _user$project$Main$view = function (model) {
 	return A2(
@@ -14633,7 +14617,10 @@ var _user$project$Main$view = function (model) {
 						}
 					}
 				},
-				_user$project$Main$drawGrid(model.grid)),
+				A2(
+					_elm_lang$core$List$append,
+					_user$project$Main$drawGrid(model.grid),
+					_user$project$Main$drawLiveCells(model.liveCells))),
 			_1: {
 				ctor: '::',
 				_0: A2(

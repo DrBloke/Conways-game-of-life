@@ -4,7 +4,7 @@ import Html exposing (Html, button, div, fieldset, input, label, p, text)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
 import List exposing (..)
-import List.Extra exposing (lift2)
+import List.Extra exposing (lift2, unique)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
 import Svg.Events exposing (onClick)
@@ -24,7 +24,8 @@ main =
 
 
 type alias Model =
-    { grid : List Cell
+    { grid : List Coords
+    , liveCells : List Coords
     , rulesOfTheGame : Rules
     , showGridLines : Bool
     , zoomLevel : Int
@@ -35,7 +36,8 @@ type alias Model =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { grid = defaultGrid
+    ( { grid = emptyGrid
+      , liveCells = []
       , rulesOfTheGame = Rules 2 3 3 Bounded
       , showGridLines = True
       , zoomLevel = 1
@@ -46,20 +48,8 @@ init =
     )
 
 
-type alias Cell =
-    { coords : Coords
-    , status : CellStatus
-    , color : Maybe String
-    }
-
-
 type alias Coords =
     ( Int, Int )
-
-
-type CellStatus
-    = Dead
-    | Alive
 
 
 type alias Rules =
@@ -109,12 +99,12 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         CellClick coords ->
-            ( { model | grid = List.map (toggleClickedCellState coords) model.grid }
+            ( { model | liveCells = toggleClickedCellState coords model.liveCells }
             , Cmd.none
             )
 
         UpdateGameState ->
-            ( { model | grid = List.map (applyGameRules model.grid) model.grid }
+            ( { model | liveCells = applyGameRules model.liveCells }
             , Cmd.none
             )
 
@@ -126,47 +116,37 @@ update msg model =
 --update helpers (don't use outside of update scope)
 
 
-toggleClickedCellState : Coords -> Cell -> Cell
-toggleClickedCellState clickedCoords cell =
-    if cell.coords == clickedCoords then
-        case cell.status of
-            Alive ->
-                { cell | status = Dead }
-
-            Dead ->
-                { cell | status = Alive }
+toggleClickedCellState : Coords -> List Coords -> List Coords
+toggleClickedCellState clickedCoords liveCells =
+    if List.member clickedCoords liveCells then
+        List.filter (\x -> x /= clickedCoords) liveCells
     else
-        cell
+        clickedCoords :: liveCells
 
 
-applyGameRules : List Cell -> Cell -> Cell
-applyGameRules grid cell =
+applyGameRules : List Coords -> List Coords
+applyGameRules liveCells =
     let
-        numberOfLiveNeighbours =
-            List.sum (lift2 isInGridAndIsLive (getNeighboursCoords cell.coords) grid)
+        --the 1 and 4 need to be replaced with Rules.max and min
+        liveCellsThatContiueToLive =
+            List.filter (\coords -> (numLiveNeighbours liveCells coords) > 1 && (numLiveNeighbours liveCells coords) < 4) liveCells
+
+        deadCellsThatComeToLife =
+            List.filter (\coords -> (numLiveNeighbours liveCells coords) == 3) (surroundingCells liveCells)
     in
-        case cell.status of
-            Alive ->
-                if numberOfLiveNeighbours < 2 then
-                    { cell | status = Dead }
-                else if numberOfLiveNeighbours > 3 then
-                    { cell | status = Dead }
-                else
-                    cell
-
-            Dead ->
-                if numberOfLiveNeighbours == 3 then
-                    { cell | status = Alive }
-                else
-                    cell
+        List.append liveCellsThatContiueToLive deadCellsThatComeToLife
+            |> unique
 
 
-isInGridAndIsLive : Coords -> Cell -> Int
-isInGridAndIsLive neighbourCoords gridCell =
-    if neighbourCoords == gridCell.coords && gridCell.status == Alive then
-        1
-    else
-        0
+numLiveNeighbours : List Coords -> Coords -> Int
+numLiveNeighbours liveCells coords =
+    List.length (liveNeighboursOfCell liveCells coords)
+
+
+liveNeighboursOfCell : List Coords -> Coords -> List Coords
+liveNeighboursOfCell liveCells coords =
+    getNeighboursCoords coords
+        |> List.filter (flip List.member liveCells)
 
 
 getNeighboursCoords : Coords -> List Coords
@@ -182,6 +162,27 @@ getNeighboursCoords ( x, y ) =
         :: []
 
 
+surroundingCells : List Coords -> List Coords
+surroundingCells liveCells =
+    List.foldl (getNeighboursIfDead liveCells) [] liveCells
+
+
+
+--list.map??
+
+
+getNeighboursIfDead : List Coords -> Coords -> List Coords -> List Coords
+getNeighboursIfDead liveCells cell deadNeighbours =
+    let
+        neighbours =
+            getNeighboursCoords cell
+
+        newDeadNeighbours =
+            List.filter (\thisNeighbour -> not <| List.member thisNeighbour liveCells) neighbours
+    in
+        List.append newDeadNeighbours deadNeighbours
+
+
 
 --View
 
@@ -195,7 +196,11 @@ view model =
             , height <| toString 500
             , viewBox (" 0 0 1000 500")
             ]
-            (drawGrid model.grid)
+            (List.append
+                --maybe by changing this to make the live cells children of the grid we could make use of Lazy
+                (drawGrid model.grid)
+                (drawLiveCells model.liveCells)
+            )
         , button [ Html.Events.onClick UpdateGameState ] [ Html.text "step" ]
         ]
 
@@ -204,25 +209,29 @@ view model =
 --View functions
 
 
-drawGrid : List Cell -> List (Svg Msg)
+drawGrid : List Coords -> List (Svg Msg)
 drawGrid grid =
-    List.map renderCell grid
+    List.map renderEmptyCell grid
 
 
-renderCell : Cell -> Svg Msg
-renderCell cell =
-    case cell.status of
-        Dead ->
-            rect [ x (toString <| ((Tuple.first cell.coords) * 50) - 50), y (toString <| ((Tuple.second cell.coords) * 50) - 50), width "50", height "50", fill (Maybe.withDefault "#ffffff" cell.color), stroke "#000000", strokeWidth "1", Svg.Events.onClick (CellClick cell.coords) ] []
-
-        Alive ->
-            rect [ x (toString <| ((Tuple.first cell.coords) * 50) - 50), y (toString <| ((Tuple.second cell.coords) * 50) - 50), width "50", height "50", fill (Maybe.withDefault "#000000" cell.color), stroke "#000000", strokeWidth "1", Svg.Events.onClick (CellClick cell.coords) ] []
+drawLiveCells : List Coords -> List (Svg Msg)
+drawLiveCells liveCells =
+    List.map renderLiveCell liveCells
 
 
-defaultGrid : List Cell
-defaultGrid =
+renderEmptyCell : Coords -> Svg Msg
+renderEmptyCell coords =
+    rect [ x (toString <| ((Tuple.first coords) * 50) - 50), y (toString <| ((Tuple.second coords) * 50) - 50), width "50", height "50", fill "#ffffff", stroke "#000000", strokeWidth "1", Svg.Events.onClick (CellClick coords) ] []
+
+
+renderLiveCell : Coords -> Svg Msg
+renderLiveCell coords =
+    rect [ x (toString <| ((Tuple.first coords) * 50) - 50), y (toString <| ((Tuple.second coords) * 50) - 50), width "50", height "50", fill "#000000" ] []
+
+
+emptyGrid : List Coords
+emptyGrid =
     cartesianProduct (range 1 20) (range 1 10)
-        |> List.map (\( x, y ) -> (Cell ( x, y ) Dead Nothing))
 
 
 cartesianProduct xs ys =
