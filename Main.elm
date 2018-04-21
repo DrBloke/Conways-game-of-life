@@ -132,7 +132,8 @@ applyGameRules liveCells =
             List.filter (\coords -> (numLiveNeighbours liveCells coords) > 1 && (numLiveNeighbours liveCells coords) < 4) liveCells
 
         deadCellsThatComeToLife =
-            List.filter (\coords -> (numLiveNeighbours liveCells coords) == 3) (surroundingCells liveCells)
+            (List.foldl (getNeighboursIfDead liveCells) [] liveCells)
+                |> List.filter (\coords -> (numLiveNeighbours liveCells coords) == 3)
     in
         List.append liveCellsThatContiueToLive deadCellsThatComeToLife
             |> unique
@@ -145,7 +146,8 @@ numLiveNeighbours liveCells coords =
 
 liveNeighboursOfCell : List Coords -> Coords -> List Coords
 liveNeighboursOfCell liveCells coords =
-    getNeighboursCoords coords
+    coords
+        |> getNeighboursCoords
         |> List.filter (flip List.member liveCells)
 
 
@@ -160,15 +162,6 @@ getNeighboursCoords ( x, y ) =
         :: ( x, y + 1 )
         :: ( x + 1, y + 1 )
         :: []
-
-
-surroundingCells : List Coords -> List Coords
-surroundingCells liveCells =
-    List.foldl (getNeighboursIfDead liveCells) [] liveCells
-
-
-
---list.map??
 
 
 getNeighboursIfDead : List Coords -> Coords -> List Coords -> List Coords
@@ -226,7 +219,7 @@ renderEmptyCell coords =
 
 renderLiveCell : Coords -> Svg Msg
 renderLiveCell coords =
-    rect [ x (toString <| ((Tuple.first coords) * 50) - 50), y (toString <| ((Tuple.second coords) * 50) - 50), width "50", height "50", fill "#000000" ] []
+    rect [ x (toString <| ((Tuple.first coords) * 50) - 50), y (toString <| ((Tuple.second coords) * 50) - 50), width "50", height "50", fill "#000000", Svg.Events.onClick (CellClick coords) ] []
 
 
 emptyGrid : List Coords
