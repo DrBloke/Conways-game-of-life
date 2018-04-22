@@ -11532,6 +11532,9 @@ var _elm_lang$svg$Svg_Events$onMouseMove = _elm_lang$svg$Svg_Events$simpleOn('mo
 var _elm_lang$svg$Svg_Events$onMouseOut = _elm_lang$svg$Svg_Events$simpleOn('mouseout');
 var _elm_lang$svg$Svg_Events$onMouseOver = _elm_lang$svg$Svg_Events$simpleOn('mouseover');
 var _elm_lang$svg$Svg_Events$onMouseUp = _elm_lang$svg$Svg_Events$simpleOn('mouseup');
+var _elm_lang$svg$Svg_Lazy$lazy3 = _elm_lang$virtual_dom$VirtualDom$lazy3;
+var _elm_lang$svg$Svg_Lazy$lazy2 = _elm_lang$virtual_dom$VirtualDom$lazy2;
+var _elm_lang$svg$Svg_Lazy$lazy = _elm_lang$virtual_dom$VirtualDom$lazy;
 var _user$project$Main$cartesianProduct = F2(
 	function (xs, ys) {
 		return A3(
@@ -11545,8 +11548,8 @@ var _user$project$Main$cartesianProduct = F2(
 	});
 var _user$project$Main$emptyGrid = A2(
 	_user$project$Main$cartesianProduct,
-	A2(_elm_lang$core$List$range, 1, 20),
-	A2(_elm_lang$core$List$range, 1, 10));
+	A2(_elm_lang$core$List$range, 1, 100),
+	A2(_elm_lang$core$List$range, 1, 50));
 var _user$project$Main$getNeighboursCoords = function (_p0) {
 	var _p1 = _p0;
 	var _p3 = _p1._1;
@@ -11616,11 +11619,12 @@ var _user$project$Main$applyGameRules = function (liveCells) {
 				A2(_user$project$Main$numLiveNeighbours, liveCells, coords),
 				3);
 		},
-		A3(
-			_elm_lang$core$List$foldl,
-			_user$project$Main$getNeighboursIfDead(liveCells),
-			{ctor: '[]'},
-			liveCells));
+		_elm_community$list_extra$List_Extra$unique(
+			A3(
+				_elm_lang$core$List$foldl,
+				_user$project$Main$getNeighboursIfDead(liveCells),
+				{ctor: '[]'},
+				liveCells)));
 	var liveCellsThatContiueToLive = A2(
 		_elm_lang$core$List$filter,
 		function (coords) {
@@ -11779,7 +11783,7 @@ var _user$project$Main$Tick = F2(
 var _user$project$Main$subscriptions = function (model) {
 	return A2(
 		_elm_lang$core$Time$every,
-		100 * _elm_lang$core$Time$millisecond,
+		1 * _elm_lang$core$Time$millisecond,
 		_user$project$Main$Tick(model.inProgress));
 };
 var _user$project$Main$ToggleInProgress = {ctor: 'ToggleInProgress'};
@@ -11818,18 +11822,18 @@ var _user$project$Main$renderEmptyCell = function (coords) {
 			ctor: '::',
 			_0: _elm_lang$svg$Svg_Attributes$x(
 				_elm_lang$core$Basics$toString(
-					(_elm_lang$core$Tuple$first(coords) * 50) - 50)),
+					(_elm_lang$core$Tuple$first(coords) * 10) - 10)),
 			_1: {
 				ctor: '::',
 				_0: _elm_lang$svg$Svg_Attributes$y(
 					_elm_lang$core$Basics$toString(
-						(_elm_lang$core$Tuple$second(coords) * 50) - 50)),
+						(_elm_lang$core$Tuple$second(coords) * 10) - 10)),
 				_1: {
 					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$width('50'),
+					_0: _elm_lang$svg$Svg_Attributes$width('10'),
 					_1: {
 						ctor: '::',
-						_0: _elm_lang$svg$Svg_Attributes$height('50'),
+						_0: _elm_lang$svg$Svg_Attributes$height('10'),
 						_1: {
 							ctor: '::',
 							_0: _elm_lang$svg$Svg_Attributes$fill('#ffffff'),
@@ -11864,18 +11868,18 @@ var _user$project$Main$renderLiveCell = function (coords) {
 			ctor: '::',
 			_0: _elm_lang$svg$Svg_Attributes$x(
 				_elm_lang$core$Basics$toString(
-					(_elm_lang$core$Tuple$first(coords) * 50) - 50)),
+					(_elm_lang$core$Tuple$first(coords) * 10) - 10)),
 			_1: {
 				ctor: '::',
 				_0: _elm_lang$svg$Svg_Attributes$y(
 					_elm_lang$core$Basics$toString(
-						(_elm_lang$core$Tuple$second(coords) * 50) - 50)),
+						(_elm_lang$core$Tuple$second(coords) * 10) - 10)),
 				_1: {
 					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$width('50'),
+					_0: _elm_lang$svg$Svg_Attributes$width('10'),
 					_1: {
 						ctor: '::',
-						_0: _elm_lang$svg$Svg_Attributes$height('50'),
+						_0: _elm_lang$svg$Svg_Attributes$height('10'),
 						_1: {
 							ctor: '::',
 							_0: _elm_lang$svg$Svg_Attributes$fill('#000000'),

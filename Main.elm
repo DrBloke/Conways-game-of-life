@@ -8,6 +8,7 @@ import List.Extra exposing (lift2, unique)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
 import Svg.Events exposing (onClick)
+import Svg.Lazy
 import Time exposing (..)
 import Material.Icons.Av exposing (skip_next, play_circle_filled, pause_circle_filled)
 import Color
@@ -153,6 +154,7 @@ applyGameRules liveCells =
 
         deadCellsThatComeToLife =
             (List.foldl (getNeighboursIfDead liveCells) [] liveCells)
+                |> unique
                 |> List.filter (\coords -> (numLiveNeighbours liveCells coords) == 3)
     in
         List.append liveCellsThatContiueToLive deadCellsThatComeToLife
@@ -224,11 +226,13 @@ view model =
 
 drawGrid : List Coords -> List (Svg Msg)
 drawGrid grid =
+    --List.map (Svg.Lazy.lazy renderEmptyCell) grid
     List.map renderEmptyCell grid
 
 
 drawLiveCells : List Coords -> List (Svg Msg)
 drawLiveCells liveCells =
+    --List.map (Svg.Lazy.lazy renderLiveCell) liveCells
     List.map renderLiveCell liveCells
 
 
@@ -261,17 +265,17 @@ skipNextButton =
 
 renderEmptyCell : Coords -> Svg Msg
 renderEmptyCell coords =
-    rect [ x (toString <| ((Tuple.first coords) * 50) - 50), y (toString <| ((Tuple.second coords) * 50) - 50), width "50", height "50", fill "#ffffff", stroke "#000000", strokeWidth "1", Svg.Events.onClick (CellClick coords) ] []
+    rect [ x (toString <| ((Tuple.first coords) * 10) - 10), y (toString <| ((Tuple.second coords) * 10) - 10), width "10", height "10", fill "#ffffff", stroke "#000000", strokeWidth "1", Svg.Events.onClick (CellClick coords) ] []
 
 
 renderLiveCell : Coords -> Svg Msg
 renderLiveCell coords =
-    rect [ x (toString <| ((Tuple.first coords) * 50) - 50), y (toString <| ((Tuple.second coords) * 50) - 50), width "50", height "50", fill "#000000", Svg.Events.onClick (CellClick coords) ] []
+    rect [ x (toString <| ((Tuple.first coords) * 10) - 10), y (toString <| ((Tuple.second coords) * 10) - 10), width "10", height "10", fill "#000000", Svg.Events.onClick (CellClick coords) ] []
 
 
 emptyGrid : List Coords
 emptyGrid =
-    cartesianProduct (range 1 20) (range 1 10)
+    cartesianProduct (range 1 100) (range 1 50)
 
 
 cartesianProduct xs ys =
@@ -284,4 +288,4 @@ cartesianProduct xs ys =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Time.every (100 * millisecond) (Tick model.inProgress)
+    Time.every (1 * millisecond) (Tick model.inProgress)
