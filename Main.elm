@@ -34,6 +34,7 @@ type alias Model =
     , zoomLevel : Int
     , inProgress : Bool
     , generationTime : Int
+    , generations : Int
     }
 
 
@@ -46,6 +47,7 @@ init =
       , zoomLevel = 1
       , inProgress = False
       , generationTime = 1000
+      , generations = 0
       }
     , Cmd.none
     )
@@ -108,7 +110,10 @@ update msg model =
             )
 
         UpdateGameState ->
-            ( { model | liveCells = applyGameRules model.liveCells }
+            ( { model
+                | liveCells = applyGameRules model.liveCells
+                , generations = model.generations + 1
+              }
             , Cmd.none
             )
 
@@ -207,6 +212,7 @@ view model =
             ((drawGrid model.grid)
                 ++ (drawLiveCells model.liveCells)
             )
+        , Html.text <| toString model.generations
         , playOrPauseButton model.inProgress
         , skipNextButton
         ]
