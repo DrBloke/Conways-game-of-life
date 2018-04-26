@@ -42,7 +42,7 @@ type alias Model =
 init : ( Model, Cmd Msg )
 init =
     ( { grid = emptyGrid
-      , liveCells = []
+      , liveCells = [ ( 50, 30 ), ( 51, 30 ), ( 50, 31 ), ( 49, 31 ), ( 50, 32 ) ]
       , rulesOfTheGame = Rules 2 3 3 Bounded
       , showGridLines = True
       , zoomLevel = 1
@@ -150,7 +150,8 @@ applyGameRules liveCells =
     let
         --the 1 and 4 need to be replaced with Rules.max and min
         liveCellsThatContiueToLive =
-            List.filter (\coords -> (numLiveNeighbours liveCells coords) > 1 && (numLiveNeighbours liveCells coords) < 4) liveCells
+            liveCells
+                |> List.filter (\coords -> (numLiveNeighbours liveCells coords) > 1 && (numLiveNeighbours liveCells coords) < 4)
 
         deadCellsThatComeToLife =
             (List.foldl (getNeighboursIfDead liveCells) [] liveCells)
@@ -158,7 +159,6 @@ applyGameRules liveCells =
                 |> List.filter (\coords -> (numLiveNeighbours liveCells coords) == 3)
     in
         List.append liveCellsThatContiueToLive deadCellsThatComeToLife
-            |> unique
 
 
 numLiveNeighbours : List Coords -> Coords -> Int
@@ -288,4 +288,4 @@ cartesianProduct xs ys =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Time.every (1 * millisecond) (Tick model.inProgress)
+    Time.every (100 * millisecond) (Tick model.inProgress)
